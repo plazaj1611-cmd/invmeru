@@ -58,12 +58,6 @@ class RepuestosController extends Controller
         return response()->json($resultados);
     }
 
-    public function edit($id)
-    {
-        $repuesto = Repuesto::findOrFail($id);
-        return view('repuestos.edit', compact('repuesto'));
-    }
-
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
@@ -79,27 +73,16 @@ class RepuestosController extends Controller
 
         $repuesto->update($validated);
 
-        if ($cantidadAnterior !== $validated['cantidad']) {
-            Movimiento::registrar($repuesto, $validated['cantidad'], 'Removido', 'Ajuste manual desde edición');
-        }
-
         return redirect()->route('repuestos.index')
             ->with('success', 'Repuesto actualizado correctamente.');
     }
 
-    public function destroy($id)
+    public function toggleEstado(Repuesto $repuesto)
     {
-        $repuesto = Repuesto::findOrFail($id);
-        $cantidadAnterior = $repuesto->cantidad;
+        $repuesto->estado = !$repuesto->estado; 
+        $repuesto->save();
 
-        // Registrar movimiento ANTES de borrar
-        Movimiento::registrar($repuesto, $cantidadAnterior, 'Removido', 'Eliminación de repuesto');
-
-        // Eliminar repuesto
-        $repuesto->delete();
-
-        return redirect()->route('repuestos.index')
-            ->with('success', 'Repuesto eliminado correctamente.');
+        return redirect()->route('inventario.index')->with('success', 'Estado del repuesto se ha actualizado correctamente.');
     }
 
     public function buscar(Request $request)
@@ -165,49 +148,7 @@ class RepuestosController extends Controller
         return view('inventario', compact('repuestos'));
     }
 
-
-    public function eliminar(Request $request)
-    {
-        $nombre = $request->input('nombre');
-
-        if (!$nombre) {
-            return response()->json([
-                'exito' => false,
-                'mensaje' => 'Debe ingresar el nombre del repuesto.'
-            ]);
-        }
-
-        $repuesto = Repuesto::where('nombre', $nombre)->first();
-
-        if (!$repuesto) {
-            return response()->json([
-                'exito' => false,
-                'mensaje' => 'No se encontró un repuesto con ese nombre.'
-            ]);
-        }
-
-        $cantidadAnterior = $repuesto->cantidad;
-
-        // Registrar movimiento ANTES de borrar 
-        Movimiento::registrar(
-            $repuesto,
-            $cantidadAnterior,
-            'removido',
-            'Eliminado desde módulo de existencias'
-        );
-
-        // Eliminar repuesto
-        $repuesto->delete();
-
-        return response()->json([
-            'exito' => true,
-            'mensaje' => "El repuesto '{$nombre}' fue eliminado correctamente."
-        ]);
-    }
-
-    // ==============================
     // RETIRAR PARA ADMIN
-    // ==============================
     public function retirarExistenciaAdmin(Request $request)
     {
         $request->validate([
@@ -248,9 +189,7 @@ class RepuestosController extends Controller
         return view('Retirar', compact('repuesto'));
     }
 
-    // ==============================
     // RETIRAR PARA USUARIO NORMAL
-    // ==============================
     public function retirarExistenciaNormal(Request $request)
     {
         $request->validate([

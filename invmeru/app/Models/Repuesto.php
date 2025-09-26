@@ -15,6 +15,7 @@ class Repuesto extends Model
         'descripcion', 
         'nombre_fabricante',
         'estado_repuesto',
+        'estado'
     ];
 
     public function movimientos()

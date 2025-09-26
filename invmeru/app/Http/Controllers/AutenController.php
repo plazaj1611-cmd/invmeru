@@ -15,11 +15,12 @@ class AutenController extends Controller
     public function procesarLogin(Request $request)
     {
         $credentials = $request->validate([
-            'usuario' => 'required|string',
+            'usuario'  => 'required|string',
             'password' => 'required|string',
         ]);
 
-        if (Auth::attempt($credentials)) {
+        // Agregamos la condición de estado = 1
+        if (Auth::attempt(array_merge($credentials, ['estado' => 1]))) {
             $request->session()->regenerate();
 
             session(['rol' => Auth::user()->rol]);
@@ -27,7 +28,7 @@ class AutenController extends Controller
             return redirect()->route('home');
         }
 
-        return back()->with('error', 'Credenciales incorrectas');
+        return back()->with('error', 'Credenciales incorrectas o usuario desactivado');
     }
 
     public function logout(Request $request)

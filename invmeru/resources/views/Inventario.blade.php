@@ -1,120 +1,97 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventario</title>
     <link rel="icon" href="{{ asset('images/iconomeru.ico') }}">
-    <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: #f4f4f4;
-            margin: 0;
-            padding: 20px;
-            color: #2c3e50;
-        }
-        .container {
-            max-width: 1000px;
-            margin: auto;
-            background: #fff;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-        h2 {
-            text-align: center;
-            margin-bottom: 20px;
-            color: #34495e;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-        th, td {
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
-            text-align: left;
-        }
-        th {
-            background: #3498db;
-            color: #fff;
-        }
-        tr:hover {
-            background: #f1f1f1;
-        }
-        .btn {
-            display: inline-block;
-            padding: 8px 14px;
-            margin-top: 15px;
-            border-radius: 6px;
-            text-decoration: none;
-            background: #3498db;
-            color: white;
-        }
-        .btn:hover {
-            background: #2980b9;
-        }
-        .logout-btn {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-        }
 
-        .logout-btn button {
-            background: #e74c3c;
-            color: #fff;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 6px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: background 0.2s ease-in-out;
-        }
-
-        .logout-btn button:hover {
-            background: #c0392b;
-        }
-    </style>
+    {{-- Tailwind desde CDN --}}
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <!-- Botón de salida -->
-    <div class="logout-btn">
-        <button onclick="location.href='{{ route('login') }}'">Salir</button>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 font-sans text-gray-800">
+
+    {{-- Botón de salida --}}
+    <div class="absolute top-4 right-6">
+        <button onclick="location.href='{{ route('login') }}'" 
+            class="px-4 py-2 rounded-lg shadow-md bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition duration-300 hover:scale-105">
+            Salir
+        </button>
     </div>
-    <div class="container">
-        <h2>Inventario de Repuestos</h2>
 
-          <a href="/admin/crear_registro" class="btn">Crear Nuevo</a>
-          <a href="/admin/agregar_existencia" class="btn">Agregar</a>
-          <a href="/admin/eliminar_registro" class="btn">Eliminar</a>
+    <div class="max-w-6xl mx-auto bg-white/90 backdrop-blur-xl p-8 rounded-2xl shadow-2xl mt-10">
+        
+        {{-- Título --}}
+        <h2 class="text-3xl font-bold text-blue-600 text-center mb-6">Inventario de Repuestos</h2>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Nombre</th>
-                    <th>Descripción</th>
-                    <th>Estado</th>
-                    <th>Marca</th>
-                    <th>Existencia</th>
-                    <th>Ultima Modificación</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($repuestos as $rep)
-                    <tr>
-                        <td>{{ $rep->nombre }}</td>
-                        <td>{{ $rep->descripcion }}</td>
-                        <td>{{ $rep->estado_repuesto }}</td>
-                        <td>{{ $rep->nombre_fabricante }}</td>
-                        <td>{{ $rep->cantidad }}</td>
-                        <td>{{ $rep->updated_at }}</td>
+        {{-- Botones superiores --}}
+        <div class="flex gap-4 mb-6">
+            <a href="/admin/crear_registro" 
+               class="px-5 py-2 rounded-lg shadow-md bg-blue-600 hover:bg-blue-700 text-white font-semibold transition duration-300 hover:scale-105">
+               Crear Nuevo
+            </a>
+            <a href="/admin/agregar_existencia" 
+               class="px-5 py-2 rounded-lg shadow-md bg-green-600 hover:bg-green-700 text-white font-semibold transition duration-300 hover:scale-105">
+               Agregar
+            </a>
+        </div>
+
+        {{-- Tabla --}}
+        <div class="overflow-x-auto">
+            <table class="w-full border-collapse rounded-lg overflow-hidden shadow">
+                <thead>
+                    <tr class="bg-blue-600 text-white text-left">
+                        <th class="px-4 py-3">Nombre</th>
+                        <th class="px-4 py-3">Descripción</th>
+                        <th class="px-4 py-3">Nuevo/Reacondionado</th>
+                        <th class="px-4 py-3">Marca</th>
+                        <th class="px-4 py-3">Existencia</th>
+                        <th class="px-4 py-3">Última Modificación</th>
+                        <th class="px-4 py-3">Estado</th>
+                        <th class="px-4 py-3">Acciones</th>
                     </tr>
-                @endforeach
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach ($repuestos as $rep)
+                        <tr class="border-b hover:bg-gray-100">
+                            <td class="px-4 py-2">{{ $rep->nombre }}</td>
+                            <td class="px-4 py-2">{{ $rep->descripcion }}</td>
+                            <td class="px-4 py-2">{{ $rep->estado_repuesto }}</td>
+                            <td class="px-4 py-2">{{ $rep->nombre_fabricante }}</td>
+                            <td class="px-4 py-2">{{ $rep->cantidad }}</td>
+                            <td class="px-4 py-2">{{ $rep->updated_at }}</td>
+                            <td class="px-4 py-2">
+                                @if($rep->estado)
+                                    <span class="px-2 py-1 text-xs rounded-lg bg-green-500 text-white font-medium">Activo</span>
+                                @else
+                                    <span class="px-2 py-1 text-xs rounded-lg bg-red-500 text-white font-medium">Inactivo</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-2">
+                                <form action="{{ route('repuestos.toggle', $rep) }}" method="POST" class="inline">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit" 
+                                        class="px-4 py-2 rounded-lg shadow-md 
+                                               {{ $rep->estado ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-green-600 hover:bg-green-700' }} 
+                                               text-white text-sm font-medium transition duration-300 hover:scale-105">
+                                        {{ $rep->estado ? 'Desactivar' : 'Activar' }}
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
 
-        <a href="/admin" class="btn">Volver al panel</a>
+        {{-- Botón volver --}}
+        <div class="mt-6">
+            <a href="/admin" 
+               class="px-5 py-2 rounded-lg shadow-md bg-gray-600 hover:bg-gray-700 text-white font-semibold transition duration-300 hover:scale-105">
+               Volver al panel
+            </a>
+        </div>
     </div>
 </body>
 </html>

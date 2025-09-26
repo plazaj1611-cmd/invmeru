@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
+
 
 class UserController extends Controller
 {
@@ -68,17 +70,17 @@ class UserController extends Controller
         return redirect()->route('usuarios.index')->with('success', 'Usuario creado correctamente.');
     }
 
-    /**
-     * Formulario para editar usuario
-     */
+        /**
+         * Formulario para editar usuario
+          */
     public function edit(User $user)
     {
         return view('Edituser', compact('user'));
     }
 
-    /**
-     * Actualizar usuario
-     */
+        /**
+         * Actualizar usuario
+         */
     public function update(Request $request, User $user)
     {
         $request->validate([
@@ -89,20 +91,45 @@ class UserController extends Controller
         $user->usuario = $request->usuario;
 
         if ($request->filled('pin')) {
-            $user->password = $request->pin; // el mutator se encarga de encriptar
+            $user->password = $request->pin; 
         }
 
         $user->save();
 
-        return redirect()->route('usuarios.index')->with('success', 'Usuario actualizado correctamente.');
+        return redirect()->route('usuarios.index')->with('success', 'Usuario se ha actualizado correctamente.');
     }
 
-    /**
-     * Eliminar usuario
-     */
-    public function destroy(User $user)
+    //Activar - Desactivar
+    public function toggleEstado(User $user)
     {
-        $user->delete();
-        return redirect()->route('usuarios.index')->with('success', 'Usuario eliminado correctamente.');
+        $user->estado = !$user->estado; 
+        $user->save();
+
+        return redirect()->route('usuarios.index')->with('success', 'Estado del usuario actualizado correctamente.');
     }
+    
+    //Proteccion con usuario desactivado
+
+    protected function credentials(Request $request)
+    {
+        return $request->only('usuario', 'password');
+    }
+
+    protected function guard()
+    {
+        return auth()->guard();
+    }
+
+    protected function attemptLogin(Request $request)
+    {
+        $credentials = $this->credentials($request);
+
+    return Auth::attempt(
+        array_merge($credentials, ['estado' => 1]),
+        $request->filled('remember')
+    );
+
+}
+
+
 }

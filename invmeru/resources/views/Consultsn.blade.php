@@ -1,192 +1,98 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Consulta de Repuestos</title>
     <link rel="icon" href="{{ asset('images/iconomeru.ico') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <style>
-        body {
-            font-family: 'Poppins', Arial, sans-serif;
-            background: #f4f4f4;
-            margin: 0;
-            padding: 40px;
-            color: #2c3e50;
-        }
 
-        .container {
-            max-width: 600px;
-            background: #fff;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            margin: auto;
-            position: relative;
-        }
-
-        .logo img {
-            display: block;
-            margin: 0 auto 15px auto;
-        }
-
-        h2 {
-            text-align: center;
-            margin-bottom: 10px;
-            color: #34495e;
-        }
-
-        h3 {
-            text-align: center;
-            margin-bottom: 20px;
-            color: #7f8c8d;
-            font-size: 16px;
-            font-weight: normal;
-        }
-
-        label {
-            font-weight: 600;
-        }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            font-size: 14px;
-        }
-
-        input:focus {
-            border-color: #3498db;
-            outline: none;
-        }
-
-        .autocomplete-list {
-            background: #f8f9fa;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            max-height: 150px;
-            overflow-y: auto;
-            margin-bottom: 15px;
-            padding: 5px;
-            display: none;
-        }
-        .autocomplete-list.show {
-            display: block;
-        }
-        .autocomplete-list div {
-            padding: 6px;
-            cursor: pointer;
-        }
-        .autocomplete-list div:hover {
-            background: #ecf0f1;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 10px 18px;
-            border-radius: 8px;
-            font-size: 14px;
-            text-decoration: none;
-            text-align: center;
-            cursor: pointer;
-            border: none;
-            transition: 0.2s ease-in-out;
-        }
-
-        .btn-primary {
-            background: #3498db;
-            color: #fff;
-        }
-
-        .btn-primary:hover {
-            background: #2980b9;
-        }
-
-        .btn-secondary {
-            background: #95a5a6;
-            color: #fff;
-        }
-
-        .btn-secondary:hover {
-            background: #7f8c8d;
-        }
-
-        .resultado {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 8px;
-            background: #f8f9fa;
-            border: 1px solid #ddd;
-        }
-
-        .resultado p {
-            margin: 8px 0;
-        }
-
-        .logout-btn {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-        }
-
-        .logout-btn button {
-            background: #e74c3c;
-            color: #fff;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 6px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: background 0.2s ease-in-out;
-        }
-
-        .logout-btn button:hover {
-            background: #c0392b;
-        }
-    </style>
+    {{-- Tailwind desde CDN --}}
+    <script src="https://cdn.tailwindcss.com"></script>
+    {{-- DaisyUI --}}
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.css" rel="stylesheet" type="text/css" />
+    {{-- Animate.css --}}
+    <link href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" rel="stylesheet">
 </head>
-<body>
-    <!-- Botón de salida -->
-    <div class="logout-btn">
-        <button onclick="location.href='{{ route('login') }}'">Salir</button>
+<body class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-100 font-sans text-gray-800">
+    {{-- Botón de salida --}}
+    <div class="absolute top-4 right-6">
+        <button onclick="location.href='{{ route('login') }}'" 
+            class="btn btn-error btn-sm rounded-lg shadow-md hover:scale-105 transition duration-300">
+            Salir
+        </button>
     </div>
 
-    <div class="container">
+    <div class="w-full max-w-2xl bg-white/90 backdrop-blur-xl p-8 rounded-2xl shadow-2xl animate__animated animate__fadeIn">
+        
         {{-- Logo --}}
-        <div class="logo">
-            <img src="{{ asset('images/logo1.jpg') }}" alt="Logo de la empresa" width="150">
+        <div class="flex justify-center mb-6">
+            <img src="{{ asset('images/logo1.jpg') }}" alt="Logo de la empresa" class="w-36 rounded-lg shadow-md">
         </div>
 
         {{-- Títulos --}}
-        <h2>Consulta de repuestos</h2>
-        <h3>Escriba el nombre del repuesto que desea consultar</h3>
+        <h2 class="text-3xl font-bold text-blue-600 text-center mb-2">Consulta de repuestos</h2>
+        <h3 class="text-lg text-gray-600 text-center mb-6">Escriba el nombre del repuesto que desea consultar</h3>
 
-        {{-- Campo de búsqueda --}}
-        <input type="text" id="nombreConsulta" placeholder="Buscar repuesto..." autocomplete="off">
-        <div class="autocomplete-list" id="autocomplete-list"></div>
+        @php($nombreConsulta = request('nombreConsulta'))
 
-        {{-- Botón de búsqueda --}}
-        <div style="display: flex; gap: 10px; justify-content: center;">
-            <button id="buscarBtn" class="btn btn-primary">Buscar</button>
-        </div>
+        {{-- Formulario --}}
+        <form method="POST" action="{{ route('consultar.normal') }}" class="space-y-4">
+            @csrf
+            <div>
+                <input type="text" name="nombre" id="nombreConsulta" 
+                       placeholder="Buscar repuesto..." 
+                       autocomplete="off"
+                       value="{{ old('nombreConsulta', $nombreConsulta) }}"
+                       class="input input-bordered w-full rounded-lg border-blue-300 focus:border-blue-500 focus:ring focus:ring-blue-200" />
+                <div id="autocomplete-list" 
+                     class="hidden mt-2 bg-white border border-gray-300 rounded-lg max-h-40 overflow-y-auto text-sm shadow-md"></div>
+            </div>
+
+            <div class="flex justify-center gap-3">
+                <button type="submit" class="px-6 py-3 rounded-xl shadow-md  bg-blue-600 hover:bg-blue-700 text-white font-semibold transition transform duration-300 hover:scale-105">Buscar</button>
+            </div>
+        </form>
 
         {{-- Resultado --}}
-        <div id="resultado" class="resultado" style="display: none;"></div>
+        @isset($resultado)
+            @if($resultado)
+                @if($resultado->estado == 1)
+                    {{-- Tarjeta solo si está activo --}}
+                    <div class="mt-6 p-4 rounded-lg bg-green-50 border border-green-400 text-green-700 shadow">
+                        <p><strong>Nombre:</strong> {{ $resultado->nombre }}</p>
+                        <p><strong>Marca:</strong> {{ $resultado->nombre_fabricante }}</p>
+                        <p><strong>Descripción:</strong> {{ $resultado->descripcion }}</p>
+                        <p><strong>Estado del Repuesto:</strong> {{ $resultado->estado_repuesto }}</p>
+                        <p><strong>Cantidad:</strong> {{ $resultado->cantidad }}</p>
+
+                        <div class="mt-4">
+                            <a href="{{ route('retirar.normal.form', ['id' => $resultado->id, 'nombre' => urlencode($resultado->nombre)]) }}" 
+                               class="px-6 py-3 rounded-xl shadow-md  bg-blue-600 hover:bg-blue-700 text-white font-semibold transition transform duration-300 hover:scale-105">Salida</a>
+                        </div>
+                    </div>
+                @else
+                    <div class="mt-6 p-4 rounded-lg bg-yellow-50 border border-yellow-400 text-yellow-700 shadow">
+                        El repuesto <strong>{{ $resultado->nombre }}</strong> está desactivado, no se pueden realizar retiros.
+                    </div>
+                @endif
+            @else
+                <div class="mt-6 p-4 rounded-lg bg-red-50 border border-red-400 text-red-700 shadow">
+                    No se encontró el repuesto "<strong>{{ $nombreConsulta }}</strong>"
+                </div>
+            @endif
+        @endisset
     </div>
 
     <script>
     const input = document.getElementById('nombreConsulta');
     const lista = document.getElementById('autocomplete-list');
-    const buscarBtn = document.getElementById('buscarBtn');
-    const resultadoDiv = document.getElementById('resultado');
 
-    // Autocompletar 
     input.addEventListener('input', function() {
         const query = this.value.trim();
         lista.innerHTML = '';
-        lista.classList.remove('show');
+        lista.classList.add('hidden');
+
         if (query.length < 2) return;
 
         fetch(`/api/repuestos/buscar?term=${encodeURIComponent(query)}`)
@@ -198,61 +104,25 @@
                         const nombre = item.nombre ?? item;
                         const div = document.createElement('div');
                         div.textContent = nombre;
+                        div.className = "px-3 py-2 cursor-pointer hover:bg-blue-100 rounded";
                         div.addEventListener('click', function() {
                             input.value = nombre;
                             lista.innerHTML = '';
-                            lista.classList.remove('show');
+                            lista.classList.add('hidden');
                         });
                         lista.appendChild(div);
                     });
-                    lista.classList.add('show');
+                    lista.classList.remove('hidden');
                 }
-            });
+            })
+            .catch(err => console.error("Error al obtener sugerencias:", err));
     });
 
     document.addEventListener('click', function(e) {
         if (!lista.contains(e.target) && e.target !== input) {
             lista.innerHTML = '';
-            lista.classList.remove('show');
+            lista.classList.add('hidden');
         }
-    });
-
-    // Buscar repuesto 
-    buscarBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        const nombre = input.value.trim();
-        if (!nombre) return;
-
-        fetch(`/consulta/normal`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-            },
-            body: JSON.stringify({ nombre: nombre })
-        })
-        .then(res => res.json())
-        .then(data => {
-            resultadoDiv.style.display = 'block';
-            if (data) {
-                resultadoDiv.innerHTML = `
-                    <p><strong>Nombre:</strong> ${data.nombre}</p>
-                    <p><strong>Marca:</strong> ${data.nombre_fabricante}</p>
-                    <p><strong>Descripción:</strong> ${data.descripcion}</p>
-                    <p><strong>Cantidad:</strong> ${data.cantidad}</p>
-                    
-                    <div style="margin-top: 15px;">
-                        <a href="/consulta/normal/${data.id}/retirar?nombre=${encodeURIComponent(data.nombre)}" 
-                           class="btn btn-primary">Salida</a>
-                    </div>`;
-            } else {
-                resultadoDiv.innerHTML = `<p>No se encontró el repuesto "${nombre}"</p>`;
-            }
-        })
-        .catch(err => {
-            resultadoDiv.style.display = 'block';
-            resultadoDiv.innerHTML = `<p style="color:red;">Error al consultar el repuesto.</p>`;
-        });
     });
     </script>
 </body>

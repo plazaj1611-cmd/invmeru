@@ -1,175 +1,81 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Retiro de Productos</title>
     <link rel="icon" href="{{ asset('images/iconomeru.ico') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <style>
-        body {
-            font-family: 'Poppins', Arial, sans-serif;
-            background: #f4f4f4;
-            margin: 0;
-            padding: 40px;
-            color: #2c3e50;
-        }
 
-        .container {
-            max-width: 600px;
-            background: #fff;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            margin: auto;
-            position: relative;
-        }
-
-        h2 {
-            text-align: center;
-            margin-bottom: 20px;
-            color: #34495e;
-        }
-
-        .field-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        input[type="text"], input[type="number"], textarea {
-            width: 100%;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            font-size: 14px;
-        }
-
-        input:focus, textarea:focus {
-            border-color: #3498db;
-            outline: none;
-        }
-
-        .btn {
-            padding: 10px 18px;
-            border-radius: 8px;
-            font-size: 14px;
-            text-align: center;
-            cursor: pointer;
-            border: none;
-            transition: 0.2s ease-in-out;
-            margin-top: 10px;
-        }
-
-        .btn-primary {
-            background: #3498db;
-            color: #fff;
-        }
-
-        .btn-primary:hover {
-            background: #2980b9;
-        }
-
-        .btn-secondary {
-            background: #95a5a6;
-            color: #fff;
-        }
-
-        .btn-secondary:hover {
-            background: #7f8c8d;
-        }
-
-        #msgSalida {
-            margin-top: 15px;
-            padding: 12px;
-            border-radius: 8px;
-            display: none;
-        }
-
-        #msgSalida.success {
-            background: #2ecc71;
-            color: #fff;
-        }
-
-        #msgSalida.error {
-            background: #e74c3c;
-            color: #fff;
-        }
-
-        .logout-btn {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-        }
-
-        .logout-btn button {
-            background: #e74c3c;
-            color: #fff;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 6px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: background 0.2s ease-in-out;
-        }
-
-        .logout-btn button:hover {
-            background: #c0392b;
-        }
-
-    </style>
+    {{-- Tailwind --}}
+    <script src="https://cdn.tailwindcss.com"></script>
+    {{-- DaisyUI --}}
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.css" rel="stylesheet" type="text/css" />
+    {{-- Animate.css --}}
+    <link href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" rel="stylesheet">
 </head>
-<body>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 font-sans text-gray-800 p-6">
+
     <!-- Botón de salida -->
-    <div class="logout-btn">
-        <button onclick="location.href='{{ route('login') }}'">Salir</button>
+    <div class="absolute top-4 right-6">
+        <button onclick="location.href='{{ route('login') }}'" 
+            class="btn btn-error btn-sm rounded-lg shadow-md hover:scale-105 transition duration-300">
+            Salir
+        </button>
     </div>
 
-    <div class="container">
-        <h2>Retiro de Productos</h2>
+    <!-- Contenedor principal -->
+    <div class="max-w-lg mx-auto bg-white/90 backdrop-blur-xl p-8 rounded-2xl shadow-2xl animate__animated animate__fadeIn">
 
-        <form id="retiroForm">
+        <h2 class="text-3xl font-bold text-center text-blue-600 mb-6">Retiro de Productos</h2>
+
+        <!-- Formulario -->
+        <form id="retiroForm" class="space-y-4">
             <input type="hidden" id="repuesto_id" name="repuesto_id" value="{{ request('id') }}" required />
-            <div class="field-group">
-                <label for="nombre_repuesto">Producto seleccionado:</label>
+
+            <div>
+                <label for="nombre_repuesto" class="block font-semibold text-gray-700">Producto seleccionado:</label>
                 <input type="text" id="nombre_repuesto" name="nombre_repuesto" readonly 
-                    value="{{ urldecode(request('nombre')) }}" />
+                    value="{{ urldecode(request('nombre')) }}"
+                    class="input input-bordered w-full bg-gray-100" />
             </div>
 
-            <div class="field-group">
-                <label for="cantidadSalida">Cantidad a retirar:</label>
-                <input type="number" id="cantidadSalida" name="cantidad" min="1" required />
+            <div>
+                <label for="cantidadSalida" class="block font-semibold text-gray-700">Cantidad a retirar:</label>
+                <input type="number" id="cantidadSalida" name="cantidad" min="1" required 
+                    class="input input-bordered w-full" />
             </div>
 
-            <div class="field-group">
-                <label for="descripcion">Nota de retiro:</label>
+            <div>
+                <label for="descripcion" class="block font-semibold text-gray-700">Nota de retiro:</label>
                 <textarea id="descripcion" name="descripcion" rows="2"
-                          placeholder="Ej: Entregado a (Responsable) al área de (Departamento)"></textarea>
+                    placeholder="Ej: Entregado a (Responsable) al área de (Departamento)"
+                    class="textarea textarea-bordered w-full"></textarea>
             </div>
-
-            <button type="submit" class="btn btn-primary">Realizar Retiro</button>
+            
+            <div class="flex justify-center gap-4 mt-6">
+            <button type="submit" 
+                class="px-6 py-3 rounded-xl w-full shadow-md bg-blue-500 hover:bg-blue-700 text-white font-semibold transition transform duration-300 hover:scale-105">
+                Realizar Retiro
+            </button>
+            </div>
         </form>
 
-        <div id="msgSalida"></div>
-        
-        @php $rol = session('rol'); @endphp
+        <!-- Mensaje dinámico -->
+        <div id="msgSalida" class="hidden mt-4"></div>
 
-        @if($rol === 'admin')
-            <button onclick="location.href='{{ route('consultar.producto') }}'" class="btn btn-secondary">
-                Ir a Consulta
-            </button>
-            <button onclick="location.href='{{ route('home') }}'" class="btn btn-secondary">
-                Menú Principal
-            </button>
-        @elseif($rol === 'usuario')
-            <button onclick="location.href='{{ route('consulta.normal') }}'" class="btn btn-secondary">
-                Ir a Consulta
-            </button>
-        @endif
+        <!-- Botones de navegación -->
+        <div class="flex flex-col gap-2 mt-4">
+
+                <button onclick="location.href='{{ route('consultar.producto') }}'" 
+                    class="px-6 py-3 rounded-xl shadow-md bg-gray-500 hover:bg-gray-600 text-white font-semibold transition transform duration-300 hover:scale-105">
+                    Ir a Consulta
+                </button>
+                <button onclick="location.href='{{ route('home') }}'" 
+                    class="px-6 py-3 rounded-xl shadow-md bg-gray-500 hover:bg-gray-600 text-white font-semibold transition transform duration-300 hover:scale-105">
+                    Menú Principal
+                </button>
+        </div>
     </div>
 
     <script>
@@ -185,9 +91,9 @@
                 descripcion: form.descripcion.value
             };
 
-            msg.style.display = 'block';
-            msg.textContent = 'Procesando retiro...';
-            msg.classList.remove('success', 'error');
+            msg.className = "alert mt-4 shadow-md";
+            msg.classList.remove("hidden");
+            msg.textContent = "Procesando retiro...";
 
             fetch('{{ route("repuestos.retirar") }}', {
                 method: 'POST',
@@ -200,14 +106,14 @@
             .then(res => res.json())
             .then(res => {
                 msg.textContent = res.mensaje;
-                msg.classList.remove('success', 'error');
-                msg.classList.add(res.exito ? 'success' : 'error');
+                msg.className = res.exito 
+                    ? "alert alert-success mt-4 shadow-md" 
+                    : "alert alert-error mt-4 shadow-md";
                 if(res.exito) form.reset();
             })
             .catch(() => {
-                msg.textContent = 'Error al conectar con el servidor.';
-                msg.classList.remove('success', 'error');
-                msg.classList.add('error');
+                msg.textContent = "Error al conectar con el servidor.";
+                msg.className = "alert alert-error mt-4 shadow-md";
             });
         });
     </script>

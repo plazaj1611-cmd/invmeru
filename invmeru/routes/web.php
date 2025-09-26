@@ -59,9 +59,8 @@ Route::middleware('rol:admin')->group(function () {
     Route::post('/repuestos/agregar', [RepuestosController::class, 'agregarExistencia'])->name('repuestos.agregar');
     Route::get('/api/repuestos/info', [RepuestosController::class, 'infoRepuesto']);
 
-    //Eliminar registro
-    Route::get('/admin/eliminar_registro', [AdminController::class, 'deleteRecord'])->name('eliminar.registro');
-    Route::post('/repuestos/eliminar', [RepuestosController::class, 'eliminar'])->name('repuestos.eliminar');
+    //Activar - Desactivar
+    Route::patch('/inventario/{repuesto}/toggle', [RepuestosController::class, 'toggleEstado'])->name('repuestos.toggle');
 
     // Gestión de usuarios
 
@@ -82,8 +81,9 @@ Route::middleware('rol:admin')->group(function () {
     Route::get('/usuarios/{user}/editar', [UserController::class, 'edit'])->name('usuarios.edit');
     Route::put('/usuarios/{user}', [UserController::class, 'update'])->name('usuarios.update');
 
-    // Eliminar usuario
-    Route::delete('/usuarios/{user}', [UserController::class, 'destroy'])->name('usuarios.destroy');
+    // Activar/Desactivar Usuario
+    Route::patch('/usuarios/{user}/toggle', [UserController::class, 'toggleEstado'])->name('usuarios.toggle');
+
 });
 
     // CRUD Repuestos

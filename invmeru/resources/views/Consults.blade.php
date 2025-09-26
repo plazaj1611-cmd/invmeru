@@ -1,205 +1,90 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Consulta de Repuestos</title>
     <link rel="icon" href="{{ asset('images/iconomeru.ico') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <style>
-        body {
-            font-family: 'Poppins', Arial, sans-serif;
-            background: #f4f4f4;
-            margin: 0;
-            padding: 40px;
-            color: #2c3e50;
-        }
 
-        .container {
-            max-width: 600px;
-            background: #fff;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            margin: auto;
-        }
-
-        .logo img {
-            display: block;
-            margin: 0 auto 15px auto;
-        }
-
-        h2 {
-            text-align: center;
-            margin-bottom: 10px;
-            color: #34495e;
-        }
-
-        h3 {
-            text-align: center;
-            margin-bottom: 20px;
-            color: #7f8c8d;
-            font-size: 16px;
-            font-weight: normal;
-        }
-
-        label {
-            font-weight: 600;
-        }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            font-size: 14px;
-        }
-
-        input:focus {
-            border-color: #3498db;
-            outline: none;
-        }
-
-        .autocomplete-list {
-            background: #f8f9fa;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            max-height: 150px;
-            overflow-y: auto;
-            margin-bottom: 15px;
-            padding: 5px;
-            display: none;
-        }
-        .autocomplete-list.show {
-            display: block;
-        }
-        .autocomplete-list div {
-            padding: 6px;
-            cursor: pointer;
-        }
-        .autocomplete-list div:hover {
-            background: #ecf0f1;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 10px 18px;
-            border-radius: 8px;
-            font-size: 14px;
-            text-decoration: none;
-            text-align: center;
-            cursor: pointer;
-            border: none;
-            transition: 0.2s ease-in-out;
-        }
-
-        .btn-primary {
-            background: #3498db;
-            color: #fff;
-        }
-
-        .btn-primary:hover {
-            background: #2980b9;
-        }
-
-        .btn-secondary {
-            background: #95a5a6;
-            color: #fff;
-        }
-
-        .btn-secondary:hover {
-            background: #7f8c8d;
-        }
-
-        .resultado {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 8px;
-            background: #f8f9fa;
-            border: 1px solid #ddd;
-        }
-
-        .resultado p {
-            margin: 8px 0;
-        }
-
-        .logout-btn {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-        }
-
-        .logout-btn button {
-            background: #e74c3c;
-            color: #fff;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 6px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: background 0.2s ease-in-out;
-        }
-
-        .logout-btn button:hover {
-            background: #c0392b;
-        }
-
-    </style>
+    {{-- Tailwind --}}
+    <script src="https://cdn.tailwindcss.com"></script>
+    {{-- DaisyUI --}}
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.css" rel="stylesheet" type="text/css" />
+    {{-- Animate.css --}}
+    <link href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" rel="stylesheet">
 </head>
-<body>
+<body class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-100 font-sans text-gray-800">
     <!-- Botón de salida -->
-        <div class="logout-btn">
-            <button onclick="location.href='{{ route('login') }}'">Salir</button>
-        </div>
+    <div class="absolute top-4 right-6">
+        <button onclick="location.href='{{ route('login') }}'" 
+            class="btn btn-error btn-sm rounded-lg shadow-md hover:scale-105 transition duration-300">
+            Salir
+        </button>
+    </div>
 
-    <div class="container">
+   <div class="w-full max-w-2xl bg-white/90 backdrop-blur-xl p-8 rounded-2xl shadow-2xl animate__animated animate__fadeIn">
+
         {{-- Logo --}}
-        <div class="logo">
-            <img src="{{ asset('images/logo1.jpg') }}" alt="Logo de la empresa" width="150">
+        <div class="flex justify-center mb-6">
+            <img src="{{ asset('images/logo1.jpg') }}" alt="Logo de la empresa" class="w-36 rounded-lg shadow-md">
         </div>
 
         {{-- Títulos --}}
-        <h2>Consulta de repuestos</h2>
-        <h3>Escriba el nombre del repuesto que desea consultar</h3>
+        <h2 class="text-3xl font-bold text-blue-600 text-center mb-2">Consulta de repuestos</h2>
+        <h3 class="text-lg text-gray-600 text-center mb-6">Escriba el nombre del repuesto que desea consultar</h3>
 
         @php($nombreConsulta = request('nombreConsulta'))
 
         {{-- Formulario --}}
-        <form method="POST" action="{{ route('consultar') }}">
+        <form method="POST" action="{{ route('consultar') }}" class="space-y-4">
             @csrf
-            <div>
-                <input type="text" name="nombreConsulta" id="nombreConsulta" 
-                       placeholder="Buscar repuesto..." 
+            <div class="relative">
+                <input type="text" name="nombreConsulta" id="nombreConsulta"
+                       placeholder="Buscar repuesto..."
                        autocomplete="off"
-                       value="{{ old('nombreConsulta', $nombreConsulta) }}">
-                <div class="autocomplete-list" id="autocomplete-list"></div>
+                       value="{{ old('nombreConsulta', $nombreConsulta) }}"
+                       class="input input-bordered w-full" />
+                <div id="autocomplete-list" 
+                     class="absolute w-full bg-blue-50 border border-blue-200 rounded-lg mt-1 shadow-md hidden z-10 max-h-40 overflow-y-auto"></div>
             </div>
 
-            <div style="display: flex; gap: 10px; justify-content: center;">
-                <button type="submit" class="btn btn-primary">Buscar</button>
-                <a href="{{ route('home') }}" class="btn btn-secondary">Volver</a>
+            <div class="flex justify-center gap-3">
+                <button type="submit" class="px-6 py-3 rounded-xl shadow-md  bg-blue-600 hover:bg-blue-700 text-white font-semibold transition transform duration-300 hover:scale-105">
+                    Buscar
+                </button>
+                <a href="{{ route('home') }}" class="px-6 py-3 rounded-xl shadow-md  bg-blue-600 hover:bg-blue-700 text-white font-semibold transition transform duration-300 hover:scale-105">
+                    Volver
+                </a>
             </div>
         </form>
 
         {{-- Resultado --}}
         @isset($resultado)
-        <div class="resultado">
             @if($resultado)
-                <p><strong>Nombre:</strong> {{ $resultado->nombre }}</p>
-                <p><strong>Marca:</strong> {{ $resultado->nombre_fabricante }}</p>
-                <p><strong>Descripción:</strong> {{ $resultado->descripcion }}</p>
-                <p><strong>Estado:</strong> {{ $resultado->estado_repuesto}}</p>
-                <p><strong>Cantidad:</strong> {{ $resultado->cantidad }}</p>
+                @if($resultado->estado == 1)
+                    <div class="mt-6 p-4 rounded-lg bg-green-50 border border-green-400 text-green-700 shadow">
+                        <p><strong>Nombre:</strong> {{ $resultado->nombre }}</p>
+                        <p><strong>Marca:</strong> {{ $resultado->nombre_fabricante }}</p>
+                        <p><strong>Descripción:</strong> {{ $resultado->descripcion }}</p>
+                        <p><strong>Estado del Repuesto:</strong> {{ $resultado->estado_repuesto }}</p>
+                        <p><strong>Cantidad:</strong> {{ $resultado->cantidad }}</p>
 
-                <div style="margin-top: 15px;">
-                    <a href="{{ route('repuestos.retirar.form', ['id' => $resultado->id, 'nombre' => urlencode($resultado->nombre)]) }}" 
-                        class="btn btn-primary">Salida</a>
-                </div>
+                        <div class="mt-4">
+                            <a href="{{ route('repuestos.retirar.form', ['id' => $resultado->id, 'nombre' => urlencode($resultado->nombre)]) }}" 
+                               class="px-6 py-3 rounded-xl shadow-md  bg-blue-600 hover:bg-blue-700 text-white font-semibold transition transform duration-300 hover:scale-105">Salida</a>
+                        </div>
+                    </div>
+                @else
+                    <div class="alert alert-warning mt-6 shadow-md">
+                        El repuesto <strong>{{ $resultado->nombre }}</strong> está desactivado, no se pueden realizar retiros.
+                    </div>
+                @endif
             @else
-                <p>No se encontró el repuesto "{{ $nombreConsulta }}"</p>
+                <div class="alert alert-error mt-6 shadow-md">
+                    No se encontró el repuesto "<strong>{{ $nombreConsulta }}</strong>"
+                </div>
             @endif
-        </div>
         @endisset
     </div>
 
@@ -210,7 +95,7 @@
     input.addEventListener('input', function() {
         const query = this.value.trim();
         lista.innerHTML = '';
-        lista.classList.remove('show');
+        lista.classList.add('hidden');
 
         if (query.length < 2) return;
 
@@ -223,14 +108,15 @@
                         const nombre = item.nombre ?? item;
                         const div = document.createElement('div');
                         div.textContent = nombre;
+                        div.classList.add("p-2", "hover:bg-blue-100", "cursor-pointer", "rounded-md");
                         div.addEventListener('click', function() {
                             input.value = nombre;
                             lista.innerHTML = '';
-                            lista.classList.remove('show');
+                            lista.classList.add('hidden');
                         });
                         lista.appendChild(div);
                     });
-                    lista.classList.add('show');
+                    lista.classList.remove('hidden');
                 }
             })
             .catch(err => console.error("Error al obtener sugerencias:", err));
@@ -239,7 +125,7 @@
     document.addEventListener('click', function(e) {
         if (!lista.contains(e.target) && e.target !== input) {
             lista.innerHTML = '';
-            lista.classList.remove('show');
+            lista.classList.add('hidden');
         }
     });
     </script>

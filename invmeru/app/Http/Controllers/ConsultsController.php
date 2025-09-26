@@ -42,11 +42,7 @@ class ConsultsController extends Controller
 
         $resultado = Repuesto::where('nombre', 'like', '%' . $nombre . '%')->first();
 
-        if ($resultado) {
-            return response()->json($resultado);
+        return view('Consultsn', compact('resultado'));
         
-        }
-
-        return response()->json(null);
     }
 }
