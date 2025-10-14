@@ -15,10 +15,11 @@
 </head>
 <body class="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 via-white to-gray-100 font-sans text-gray-800">
 
-    {{-- Botón de salida --}}
+    <!-- Botón de salida -->
     <div class="absolute top-4 right-6">
         <button onclick="location.href='{{ route('login') }}'" 
-            class="btn btn-error btn-sm rounded-lg shadow-md hover:scale-105 transition transform duration-300">
+            class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-lg shadow-md hover:scale-105 transition-transform duration-300">
+            <img src="{{ asset('images/salir.png') }}" alt="Salir" class="w-5 h-5">
             Salir
         </button>
     </div>
@@ -35,16 +36,19 @@
 
         {{-- Menú --}}
         <div class="flex flex-wrap justify-center gap-4">
-            <a href="{{ route('consultar.producto') }}" 
-                class="px-6 py-3 rounded-xl shadow-md  bg-blue-600 hover:bg-blue-700 text-white font-semibold transition transform duration-300 hover:scale-105">
+            <a href="{{ route('consultar.producto') }}"
+                class="flex items-center gap-2 px-6 py-3 rounded-xl shadow-md bg-blue-600 hover:bg-blue-700 text-white font-semibold transition transform duration-300 hover:scale-105">
+                <img src="{{ asset('images/buscar.png') }}" alt="Consultar" class="w-10 h-10">
                 Consultar Producto
             </a>
             <a href="{{ route('reports.index') }}" 
-                class="px-6 py-3 rounded-xl shadow-md  bg-blue-600 hover:bg-blue-700 text-white font-semibold transition transform duration-300 hover:scale-105">
+                class="flex items-center gap-2 px-6 py-3 rounded-xl shadow-md bg-blue-600 hover:bg-blue-700 text-white font-semibold transition transform duration-300 hover:scale-105">
+                <img src="{{ asset('images/reporte.png') }}" alt="Consultar" class="w-10 h-10">
                 Reportes
             </a>
             <a href="{{ route('administrador') }}" 
-                class="px-6 py-3 rounded-xl shadow-md  bg-blue-600 hover:bg-blue-700 text-white font-semibold transition transform duration-300 hover:scale-105">
+                class="flex items-center gap-2 px-6 py-3 rounded-xl shadow-md bg-blue-600 hover:bg-blue-700 text-white font-semibold transition transform duration-300 hover:scale-105">
+                <img src="{{ asset('images/modificar.png') }}" alt="Consultar" class="w-10 h-10">
                 Modificación
             </a>
         </div>

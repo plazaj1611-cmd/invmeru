@@ -68,7 +68,7 @@
 
         {{-- Footer opcional --}}
         <p class="text-center text-gray-500 mt-6 text-sm">
-            © {{ date('Y') }} Inventario de Repuestos
+            © {{ date('Y') }} Invmeru
         </p>
     </div>
 

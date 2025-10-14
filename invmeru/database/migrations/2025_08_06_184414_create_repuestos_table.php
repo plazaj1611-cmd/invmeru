@@ -13,19 +13,18 @@ return new class extends Migration
     {
         Schema::create('repuestos', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre', 100);
-            $table->integer('cantidad')->nullable();
-            $table->text('descripciones')->nullable();
-            $table->string('nombre_fabricante', 100);
-            $table->integer('stock_actual')->default(0);
-            $table->enum('estado_repuesto', ['nuevo', 'reacondicionado']);
+            $table->string('codigo')->unique();
+            $table->string('nombre');
+            $table->text('descripcion')->nullable();
+            $table->unsignedInteger('existencia')->default(0);
+            $table->string('nombre_fabricante')->nullable();
+            $table->enum('estado_repuesto', ['nuevo', 'usado', 'reacondicionado'])->default('nuevo');
+            $table->boolean('estado')->default(1); 
+            $table->foreignId('deposito_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('repuestos');

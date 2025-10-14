@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Deposito;
 
 class AdminController extends Controller
 {
@@ -13,7 +14,8 @@ class AdminController extends Controller
 
     public function create()
     {
-        return view ('Create');
+        $depositos = Deposito::all();
+        return view('create', compact('depositos')); // ← Asegúrate de que el nombre de la vista sea 'create'
     }
 
     public function addExistence()

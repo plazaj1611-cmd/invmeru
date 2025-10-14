@@ -9,6 +9,8 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\RepuestosController;
 use App\Http\Controllers\MovementController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\EntradaRepuestosController;
+use App\Http\Controllers\DepositoController;
 use App\Models\Repuesto;
 
 // Login
@@ -30,7 +32,7 @@ Route::get('/home', function () {
 Route::get('/api/repuestos/buscar', [RepuestosController::class, 'buscarAjax'])->name('repuestos.buscar');
 
 // Rutas protegidas para administradores
-Route::middleware('rol:admin')->group(function () {
+Route::middleware(['auth', 'rol:admin'])->group(function () {
     // Consultas
     Route::get('/consulta', [ConsultsController::class, 'indexadmin'])->name('consultar.producto');
     Route::post('/consulta', [ConsultsController::class, 'consultarAdmin'])->name('consultar');
@@ -38,36 +40,47 @@ Route::middleware('rol:admin')->group(function () {
     // Retirar
     Route::get('/repuestos/{id}/retirar', [RepuestosController::class, 'retirarFormAdmin'])->name('repuestos.retirar.form');
     Route::post('/repuestos/retirar', [RepuestosController::class, 'retirarExistenciaAdmin'])->name('repuestos.retirar');
+    Route::get('/repuestos/{id}/depositos', [RepuestosController::class, 'obtenerDepositosPorRepuesto']);
 
-    //Inventario
+
+    // Inventario
     Route::get('/inventario', [RepuestosController::class, 'inventario'])->name('inventario.index');
 
     // Reportes
     Route::get('/reports', [ReportsController::class, 'index'])->name('reports.index');
     Route::post('/reports/general', [ReportsController::class, 'generarGeneral'])->name('reports.general');
     Route::post('/reports/detallado', [ReportsController::class, 'generarDetallado'])->name('reports.detallado');
+    Route::get('/reports/hoy', [ReportsController::class, 'hoy'])->name('reports.hoy');
+    Route::get('/reports/ayer', [ReportsController::class, 'ayer'])->name('reports.ayer');
+
+    // Depositos
+    Route::get('/depositos', [DepositoController::class, 'index'])->name('depositos.index');
+    Route::get('/depositos/{id}', [DepositoController::class, 'show'])->name('depositos.show');
+    Route::post('/depositos', [DepositoController::class, 'store'])->name('depositos.store');
 
     // Administración
     Route::get('/admin', [AdminController::class, 'index'])->name('administrador');
 
-    //Crear Registro
+    // Crear Registro
     Route::get('/admin/crear_registro', [AdminController::class, 'create'])->name('crear.registro');
     Route::post('/repuestos', [RepuestosController::class, 'store'])->name('repuestos.store');
 
-    //Agregar existencia
-    Route::get('/admin/agregar_existencia', [AdminController::class, 'addExistence'])->name('agregar.existencias');
-    Route::post('/repuestos/agregar', [RepuestosController::class, 'agregarExistencia'])->name('repuestos.agregar');
+    // Agregar existencia
+    Route::get('/admin/agregar_existencia', [EntradaRepuestosController::class, 'create'])->name('agregar.existencias');
+    Route::post('/admin/agregar_existencia', [EntradaRepuestosController::class, 'store'])->name('entrada.store');
     Route::get('/api/repuestos/info', [RepuestosController::class, 'infoRepuesto']);
 
-    //Activar - Desactivar
+    // Ver Entradas
+    Route::get('/repuestos/{id}/entradas', [EntradaRepuestosController::class, 'getEntradas']);
+
+    // Activar - Desactivar
     Route::patch('/inventario/{repuesto}/toggle', [RepuestosController::class, 'toggleEstado'])->name('repuestos.toggle');
 
-    // Gestión de usuarios
-
-    //Cambiar Pin
+// Gestión de usuarios
+    // Cambiar Pin
     Route::post('/usuarios/cambiar-pin', [UserController::class, 'cambiarPin'])->name('cambiar.pin');
 
-    //Administrar usuarios 
+    // Administrar usuarios 
     Route::prefix('usuarios')->group(function () {
 
     // Mostrar todos los usuarios
@@ -89,19 +102,20 @@ Route::middleware('rol:admin')->group(function () {
     // CRUD Repuestos
     Route::resource('repuestos', RepuestosController::class);
 
-    // Movimientos
-    Route::get('/movimientos/create', [MovementController::class, 'create'])->name('movimientos.create');
-    Route::post('/movimientos', [MovementController::class, 'store'])->name('movimientos.store');
 });
 
 // Rutas protegidas para usuarios normales
-Route::middleware('rol:usuario')->group(function () {
+Route::middleware(['auth', 'rol:usuario'])->group(function () {
 
     //Consulta
     Route::get('/consulta/normal', [ConsultsController::class, 'indexnormal'])->name('consulta.normal');
     Route::post('/consulta/normal', [ConsultsController::class, 'consultarNormal'])->name('consultar.normal');
+
+    // Ver Entradas
+    Route::get('/repuestos/{id}/entradasn', [EntradaRepuestosController::class, 'getEntradas']);
     
     //Retirar
     Route::get('/consulta/normal/{id}/retirar', [RepuestosController::class, 'retirarFormNormal'])->name('retirar.normal.form');
     Route::post('/consulta/normal/retirar', [RepuestosController::class, 'retirarExistenciaNormal'])->name('retirar.normal');
+    Route::get('/repuestos/{id}/depositosn', [RepuestosController::class, 'obtenerDepositosPorRepuesto']);
 });

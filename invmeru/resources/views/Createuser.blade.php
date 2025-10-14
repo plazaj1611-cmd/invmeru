@@ -16,6 +16,15 @@
 </head>
 <body class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-100 font-sans text-gray-800">
 
+    <!-- Botón de salida -->
+    <div class="absolute top-4 right-6">
+        <button onclick="location.href='{{ route('login') }}'" 
+            class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-lg shadow-md hover:scale-105 transition-transform duration-300">
+            <img src="{{ asset('images/salir.png') }}" alt="Salir" class="w-5 h-5">
+            Salir
+        </button>
+    </div>
+
     <!-- Contenedor principal -->
     <div class="w-full max-w-lg bg-white/90 backdrop-blur-xl p-8 rounded-2xl shadow-2xl animate__animated animate__fadeIn">
 

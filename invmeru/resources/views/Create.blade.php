@@ -19,7 +19,8 @@
     <!-- Botón de salida -->
     <div class="absolute top-4 right-6">
         <button onclick="location.href='{{ route('login') }}'" 
-            class="btn btn-error btn-sm rounded-lg shadow-md hover:scale-105 transition duration-300">
+            class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-lg shadow-md hover:scale-105 transition-transform duration-300">
+            <img src="{{ asset('images/salir.png') }}" alt="Salir" class="w-5 h-5">
             Salir
         </button>
     </div>
@@ -40,13 +41,18 @@
             @csrf
 
             <div>
+                <label class="block font-semibold mb-1">Código del repuesto</label>
+                <input type="text" name="codigo" required class="input input-bordered w-full">
+            </div>
+
+            <div>
                 <label class="block font-semibold mb-1">Nombre</label>
                 <input type="text" name="nombre" required class="input input-bordered w-full">
             </div>
 
             <div>
                 <label class="block font-semibold mb-1">Cantidad</label>
-                <input type="number" name="cantidad" value="1" min="1" required class="input input-bordered w-full">
+                <input type="number" name="existencia" value="1" min="1" required class="input input-bordered w-full">
             </div>
 
             <div>
@@ -60,18 +66,46 @@
             </div>
 
             <div>
+                <label class="block font-semibold mb-1">Origen de compra</label>
+                <input type="text" name="origen_compra" required class="input input-bordered w-full">
+            </div>
+
+            <div>
+                <label class="block font-semibold mb-1">Precio unitario</label>
+                <input type="number" name="precio_unitario" min="0" step="0.01" required class="input input-bordered w-full">
+            </div>
+
+            <div>
+                <label class="block font-semibold mb-1">Fecha de compra</label>
+                <input type="date" name="fecha_compra" required class="input input-bordered w-full">
+            </div>
+
+            <div>
                 <label class="block font-semibold mb-1">Estado del Repuesto</label>
                 <select name="estado_repuesto" class="select select-bordered w-full">
                     <option value="nuevo">Nuevo</option>
+                    <option value="usado">Usado</option>
                     <option value="reacondicionado">Reacondicionado</option>
                 </select>
             </div>
 
+            <div>
+                <label class="block font-semibold mb-1">Depósito Destino:</label>
+                <select name="deposito_id" id="deposito_id" class="select select-bordered w-full" required>
+                    <option value="">Seleccione un depósito</option>
+                    @foreach($depositos as $deposito)
+                        <option value="{{ $deposito->id }}">
+                            {{ $deposito->nombre }} — {{ $deposito->ubicacion }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
             <div class="flex justify-center gap-3 pt-4">
-                <button type="submit" class="px-6 py-3 rounded-xl shadow-md  bg-blue-600 hover:bg-blue-700 text-white font-semibold transition transform duration-300 hover:scale-105">
+                <button type="submit" class="px-6 py-3 rounded-xl shadow-md bg-blue-600 hover:bg-blue-700 text-white font-semibold transition transform duration-300 hover:scale-105">
                     Guardar Registro
                 </button>
-                <a href="/inventario" class="px-6 py-3 rounded-xl shadow-md  bg-blue-600 hover:bg-blue-700 text-white font-semibold transition transform duration-300 hover:scale-105">
+                <a href="/inventario" class="px-6 py-3 rounded-xl shadow-md bg-blue-600 hover:bg-blue-700 text-white font-semibold transition transform duration-300 hover:scale-105">
                     Volver
                 </a>
             </div>
@@ -86,6 +120,7 @@
             e.preventDefault();
             const form = e.target;
             const formData = new FormData(form);
+            formData.append('_token', document.querySelector('[name=_token]').value);
 
             const msg = document.getElementById('crearMsg');
             msg.textContent = 'Guardando repuesto...';
@@ -93,7 +128,6 @@
 
             fetch("{{ route('repuestos.store') }}", {
                 method: 'POST',
-                headers: { 'X-CSRF-TOKEN': document.querySelector('[name=_token]').value },
                 body: formData
             })
             .then(res => res.json())

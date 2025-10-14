@@ -35,14 +35,13 @@ class ConsultsController extends Controller
     public function consultarNormal(Request $request)
     {
         $request->validate([
-            'nombre' => 'required|string|max:255',
+            'nombreConsulta' => 'required|string|max:255',
         ]);
 
-        $nombre = trim($request->input('nombre'));
+        $nombre = trim($request->input('nombreConsulta'));
 
         $resultado = Repuesto::where('nombre', 'like', '%' . $nombre . '%')->first();
 
-        return view('Consultsn', compact('resultado'));
-        
+        return view('Consultsn', compact('resultado', 'nombre'));
     }
 }

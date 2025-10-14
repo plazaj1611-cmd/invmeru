@@ -18,7 +18,8 @@
     <!-- Botón de salida -->
     <div class="absolute top-4 right-6">
         <button onclick="location.href='{{ route('login') }}'" 
-            class="btn btn-error btn-sm rounded-lg shadow-md hover:scale-105 transition duration-300">
+            class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-lg shadow-md hover:scale-105 transition-transform duration-300">
+            <img src="{{ asset('images/salir.png') }}" alt="Salir" class="w-5 h-5">
             Salir
         </button>
     </div>
@@ -29,17 +30,26 @@
 
         <div class="flex flex-col gap-4">
             <a href="{{ route('inventario.index') }}" 
-               class="px-6 py-3 rounded-xl shadow-md  bg-blue-600 hover:bg-blue-700 text-white font-semibold transition transform duration-300 hover:scale-105 text-center">
+                class="flex items-center gap-2 px-6 py-3 rounded-xl shadow-md bg-blue-600 hover:bg-blue-700 text-white font-semibold transition transform duration-300 hover:scale-105">
+                <img src="{{ asset('images/inventario.png') }}" alt="Consultar" class="w-10 h-10">
                 Ver Inventario
             </a>
 
             <a href="{{ route('usuarios.index') }}" 
-               class="px-6 py-3 rounded-xl shadow-md  bg-blue-600 hover:bg-blue-700 text-white font-semibold transition transform duration-300 hover:scale-105 text-center">
+                class="flex items-center gap-2 px-6 py-3 rounded-xl shadow-md bg-blue-600 hover:bg-blue-700 text-white font-semibold transition transform duration-300 hover:scale-105">
+                <img src="{{ asset('images/usuario.png') }}" alt="Consultar" class="w-10 h-10">
                 Gestión de Usuarios
             </a>
 
+            <a href="{{ route('depositos.index') }}" 
+                class="flex items-center gap-2 px-6 py-3 rounded-xl shadow-md bg-blue-600 hover:bg-blue-700 text-white font-semibold transition transform duration-300 hover:scale-105">
+                <img src="{{ asset('images/deposito.png') }}" alt="Consultar" class="w-10 h-10">
+                Gestión de Depositos
+            </a>
+
             <a href="{{ route('home') }}" 
-               class="px-6 py-3 rounded-xl shadow-md  bg-blue-600 hover:bg-blue-700 text-white font-semibold transition transform duration-300 hover:scale-105 text-center">
+                class="flex items-center gap-2 px-6 py-3 rounded-xl shadow-md bg-blue-600 hover:bg-blue-700 text-white font-semibold transition transform duration-300 hover:scale-105">
+                <img src="{{ asset('images/volver.png') }}" alt="Consultar" class="w-10 h-10">
                 Volver al Menú Principal
             </a>
         </div>

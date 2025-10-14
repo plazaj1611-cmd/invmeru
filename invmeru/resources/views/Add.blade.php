@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agregar Stock</title>
+    <title>Registrar Entrada</title>
     <link rel="icon" href="{{ asset('images/iconomeru.ico') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
@@ -19,65 +19,113 @@
     <!-- Botón de salida -->
     <div class="absolute top-4 right-6">
         <button onclick="location.href='{{ route('login') }}'" 
-            class="btn btn-error btn-sm rounded-lg shadow-md hover:scale-105 transition duration-300">
+            class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-lg shadow-md hover:scale-105 transition-transform duration-300">
+            <img src="{{ asset('images/salir.png') }}" alt="Salir" class="w-5 h-5">
             Salir
         </button>
     </div>
 
     <!-- Contenedor -->
     <div class="max-w-lg mx-auto bg-white/90 backdrop-blur-xl p-8 rounded-2xl shadow-2xl animate__animated animate__fadeIn">
-        <h2 class="text-3xl font-bold text-center text-blue-600 mb-6">Agregar Stock</h2>
+        <h2 class="text-3xl font-bold text-center text-blue-600 mb-6">Registrar Entrada</h2>
 
-        <form id="agregarForm" class="space-y-4">
+        <form id="entradaForm" class="space-y-4" method="POST" action="{{ route('entrada.store') }}">
+            @csrf
+
+            <!-- Campo Código -->
             <div>
-                <label for="nombreAgregar" class="block font-semibold text-gray-700">Nombre del producto</label>
-                <input type="text" name="nombre" id="nombreAgregar" autocomplete="off" required 
-                       oninput="buscarSimilaresAgregar()"
-                       class="input input-bordered w-full rounded-lg border-blue-300 focus:border-blue-500 focus:ring focus:ring-blue-200" />
+                <label for="codigoAgregar" class="block font-semibold text-gray-700">Código del repuesto</label>
+                <input type="text" name="codigo" id="codigoAgregar" autocomplete="off" required 
+                    oninput="buscarPorCodigo()"
+                    class="input input-bordered w-full rounded-lg border-blue-300 focus:border-blue-500 focus:ring focus:ring-blue-200" />
+                <input type="hidden" name="repuesto_id" id="repuestoId">
             </div>
 
-            <!-- Sugerencias -->
-            <div id="sugerenciasAgregar" class="hidden mt-2 bg-white border border-gray-300 rounded-lg max-h-40 overflow-y-auto text-sm shadow-md"></div>
+            <!-- Nombre (solo lectura) -->
+            <div>
+                <label for="nombreRepuesto" class="block font-semibold text-gray-700">Nombre del repuesto</label>
+                <input type="text" id="nombreRepuesto" readonly
+                    class="input input-bordered w-full bg-gray-100 text-gray-700 cursor-not-allowed rounded-lg border-gray-300" />
+            </div>
+            
+            <!-- Información del repuesto -->
+            <div id="infoRepuesto" class="hidden mt-4 p-4 rounded-lg bg-blue-50 border border-blue-200">
+                <h3 class="text-lg font-bold text-blue-700 mb-2">Información del repuesto</h3>
+                <p><span class="font-semibold">Nombre:</span> <span id="repNombre"></span></p>
+                <p><span class="font-semibold">Descripción:</span> <span id="repDescripcion"></span></p>
+                <p><span class="font-semibold">Marca:</span> <span id="repMarca"></span></p>
+                <p><span class="font-semibold">Stock actual:</span> <span id="repStock"></span></p>
+            </div>
 
-            <!-- Info Repuesto -->
-            <div id="infoRepuesto" class="hidden p-4 rounded-lg bg-blue-50 border border-blue-300 shadow">
-                <p><strong>Nombre:</strong> <span id="repNombre"></span></p>
-                <p><strong>Descripción:</strong> <span id="repDescripcion"></span></p>
-                <p><strong>Marca:</strong> <span id="repMarca"></span></p>
-                <p><strong>Stock actual:</strong> <span id="repStock"></span></p>
+            <!-- Origen -->
+            <div>
+                <label for="origenCompra" class="block font-semibold text-gray-700">Origen de compra</label>
+                <input type="text" name="origen_compra" id="origenCompra" required
+                    class="input input-bordered w-full rounded-lg border-blue-300 focus:border-blue-500 focus:ring focus:ring-blue-200" />
+            </div>
+
+            <!-- Precio -->
+            <div>
+                <label for="precioUnitario" class="block font-semibold text-gray-700">Precio unitario</label>
+                <input type="number" name="precio_unitario" id="precioUnitario" min="0" step="0.01" required
+                    class="input input-bordered w-full rounded-lg border-blue-300 focus:border-blue-500 focus:ring focus:ring-blue-200" />
+            </div>
+
+            <!-- Cantidad -->
+            <div>
+                <label for="cantidad" class="block font-semibold text-gray-700">Cantidad adquirida</label>
+                <input type="number" name="cantidad_adquirida" id="cantidad" min="1" required
+                    class="input input-bordered w-full rounded-lg border-blue-300 focus:border-blue-500 focus:ring focus:ring-blue-200" />
+            </div>
+
+            <!-- Fecha -->
+            <div>
+                <label for="fechaCompra" class="block font-semibold text-gray-700">Fecha de compra</label>
+                <input type="date" name="fecha_compra" id="fechaCompra" required
+                    class="input input-bordered w-full rounded-lg border-blue-300 focus:border-blue-500 focus:ring focus:ring-blue-200" />
             </div>
 
             <div>
-                <label for="cantidad" class="block font-semibold text-gray-700">Cantidad a agregar</label>
-                <input type="number" name="cantidad" min="1" required
-                       class="input input-bordered w-full rounded-lg border-blue-300 focus:border-blue-500 focus:ring focus:ring-blue-200" />
+                <label class="block font-semibold mb-1">Depósito Destino:</label>
+                <select name="deposito_id" id="deposito_id" class="select select-bordered w-full" required>
+                    <option value="">Seleccione un depósito</option>
+                    @foreach($depositos as $deposito)
+                        <option value="{{ $deposito->id }}">
+                            {{ $deposito->nombre }} — {{ $deposito->ubicacion }}
+                        </option>
+                    @endforeach
+                </select>
             </div>
 
             <!-- Botones -->
             <div class="flex gap-3 justify-center">
-                <button type="submit" class="px-6 py-3 rounded-xl shadow-md  bg-blue-600 hover:bg-blue-700 text-white font-semibold transition transform duration-300 hover:scale-105">Agregar</button>
-                <a href="/inventario" class="px-6 py-3 rounded-xl shadow-md  bg-blue-600 hover:bg-blue-700 text-white font-semibold transition transform duration-300 hover:scale-105">Volver</a>
+                <button type="submit" class="px-6 py-3 rounded-xl shadow-md bg-blue-600 hover:bg-blue-700 text-white font-semibold transition transform duration-300 hover:scale-105">Registrar</button>
+                <a href="/inventario" class="px-6 py-3 rounded-xl shadow-md bg-gray-500 hover:bg-gray-700 text-white font-semibold transition transform duration-300 hover:scale-105">Volver</a>
             </div>
         </form>
 
+
         <!-- Mensaje -->
-        <div id="agregarMsg" class="hidden mt-4 p-3 rounded-lg text-center font-semibold shadow"></div>
+        <div id="entradaMsg" class="hidden mt-4 p-3 rounded-lg text-center font-semibold shadow"></div>
     </div>
 
     <script>
-        const form = document.getElementById('agregarForm');
-        const msg = document.getElementById('agregarMsg');
+        const form = document.getElementById('entradaForm');
+        const msg = document.getElementById('entradaMsg');
+        const repuestoId = document.getElementById('repuestoId');
+        const nombreRepuesto = document.getElementById('nombreRepuesto');
 
+        // Enviar formulario
         form.addEventListener('submit', function(e) {
             e.preventDefault();
 
             msg.className = "mt-4 p-3 rounded-lg text-center font-semibold shadow bg-blue-50 text-blue-700 animate__animated animate__fadeIn";
-            msg.textContent = 'Agregando stock...';
+            msg.textContent = 'Registrando entrada...';
             msg.classList.remove('hidden');
 
             const formData = new FormData(form);
 
-            fetch('/repuestos/agregar', {
+            fetch('{{ route('entrada.store') }}', {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
@@ -89,13 +137,18 @@
                 msg.classList.remove('hidden');
                 msg.textContent = data.mensaje;
 
-                if (data.exito) {
-                    msg.className = "mt-4 p-3 rounded-lg text-center font-semibold shadow bg-green-50 text-green-700 animate__animated animate__fadeIn";
-                    form.reset();
-                    document.getElementById('infoRepuesto').classList.add('hidden');
-                } else {
-                    msg.className = "mt-4 p-3 rounded-lg text-center font-semibold shadow bg-red-50 text-red-700 animate__animated animate__shakeX";
-                }
+            @if(session('success'))
+                <div class="p-3 mb-4 text-green-700 bg-green-100 rounded-lg shadow">
+                    {{ session('success') }}
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div class="p-3 mb-4 text-red-700 bg-red-100 rounded-lg shadow">
+                    {{ session('error') }}
+                </div>
+            @endif
+
             })
             .catch(() => {
                 msg.classList.remove('hidden');
@@ -104,53 +157,40 @@
             });
         });
 
-        function buscarSimilaresAgregar() {
-            const input = document.getElementById('nombreAgregar');
-            const sugerencias = document.getElementById('sugerenciasAgregar');
-            const query = input.value.trim();
+        // Buscar repuesto por código
+        function buscarPorCodigo() {
+            const codigo = document.getElementById('codigoAgregar').value.trim();
 
-            if (query.length < 2) {
-                sugerencias.innerHTML = '';
-                sugerencias.classList.add('hidden');
+            if (codigo.length < 2) {
+                repuestoId.value = '';
+                nombreRepuesto.value = '';
+                document.getElementById('infoRepuesto').classList.add('hidden');
                 return;
             }
 
-            fetch(`/api/repuestos/buscar?term=${encodeURIComponent(query)}`)
+            fetch(`/api/repuestos/info?codigo=${encodeURIComponent(codigo)}`)
                 .then(res => res.json())
-                .then(data => {
-                    sugerencias.innerHTML = '';
-                    if (data.length > 0) {
-                        data.forEach(item => {
-                            const div = document.createElement('div');
-                            div.textContent = item;
-                            div.className = "px-3 py-2 cursor-pointer hover:bg-blue-100 rounded transition";
+                .then(rep => {
+                    if (rep) {
+                        repuestoId.value = rep.id;
+                        nombreRepuesto.value = rep.nombre;
 
-                            div.onclick = function() {
-                                input.value = this.textContent;
-                                sugerencias.innerHTML = '';
-                                sugerencias.classList.add('hidden');
-
-                                fetch(`/api/repuestos/info?nombre=${encodeURIComponent(this.textContent)}`)
-                                    .then(res => res.json())
-                                    .then(rep => {
-                                        if (rep) {
-                                            document.getElementById('infoRepuesto').classList.remove('hidden');
-                                            document.getElementById('repNombre').textContent = rep.nombre;
-                                            document.getElementById('repDescripcion').textContent = rep.descripcion ?? 'Sin descripción';
-                                            document.getElementById('repMarca').textContent = rep.marca ?? 'N/A';
-                                            document.getElementById('repStock').textContent = rep.cantidad ?? 0;
-                                        }
-                                    })
-                                    .catch(err => {
-                                        console.error("Error cargando repuesto:", err);
-                                        document.getElementById('infoRepuesto').classList.add('hidden');
-                                    });
-                            };
-
-                            sugerencias.appendChild(div);
-                        });
-                        sugerencias.classList.remove('hidden');
+                        document.getElementById('infoRepuesto').classList.remove('hidden');
+                        document.getElementById('repNombre').textContent = rep.nombre;
+                        document.getElementById('repDescripcion').textContent = rep.descripcion ?? 'Sin descripción';
+                        document.getElementById('repMarca').textContent = rep.marca ?? 'N/A';
+                        document.getElementById('repStock').textContent = rep.existencia ?? 0;
+                    } else {
+                        repuestoId.value = '';
+                        nombreRepuesto.value = '';
+                        document.getElementById('infoRepuesto').classList.add('hidden');
                     }
+                })
+                .catch(err => {
+                    console.error("Error cargando repuesto:", err);
+                    repuestoId.value = '';
+                    nombreRepuesto.value = '';
+                    document.getElementById('infoRepuesto').classList.add('hidden');
                 });
         }
     </script>

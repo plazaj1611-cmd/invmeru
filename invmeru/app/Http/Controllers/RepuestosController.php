@@ -3,228 +3,386 @@
 namespace App\Http\Controllers;
 
 use App\Models\Repuesto;
-use Illuminate\Http\Request;
+use App\Models\EntradaRepuesto;
 use App\Models\Movimiento;
+use App\Models\Deposito;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
 class RepuestosController extends Controller
 {
+    // Listar todos los repuestos
     public function index()
     {
         $repuestos = Repuesto::orderBy('nombre', 'asc')->get();
-        return view('repuestos.index', compact('repuestos'));
+        return view('create', compact('repuestos'));
     }
 
+    // Mostrar formulario para crear un repuesto
     public function create()
     {
-        return view('repuestos.create');
+        $depositos = Deposito::all();
+        return view('create', compact('depositos'));
     }
 
+    // Guardar repuesto nuevo
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'nombre'            => 'required|string|max:255',
-            'cantidad'          => 'required|integer|min:1',
-            'descripcion'       => 'nullable|string',
-            'nombre_fabricante' => 'nullable|string|max:255',
-            'estado_repuesto'   => 'required|string|in:nuevo,reacondicionado',
-        ]);
-
         try {
+            $validated = $request->validate([
+                'codigo'              => 'required|string|max:255',
+                'nombre'              => 'required|string|max:255',
+                'descripcion'         => 'nullable|string|max:1000',
+                'existencia'          => 'required|integer|min:1',
+                'nombre_fabricante'   => 'nullable|string|max:255',
+                'estado_repuesto'     => 'required|in:nuevo,usado,reacondicionado',
+                'deposito_id'         => 'required|exists:depositos,id',
+                'origen_compra'       => 'required|string|max:255',
+                'precio_unitario'     => 'required|numeric|min:0',
+                'fecha_compra'        => 'required|date',
+            ]);
+
             $repuesto = Repuesto::create($validated);
 
-            Movimiento::registrar($repuesto, $validated['cantidad'], 'entrada', 'Registro inicial de stock');
+            EntradaRepuesto::create([
+                'repuesto_id'        => $repuesto->id,
+                'cantidad_adquirida' => $validated['existencia'],
+                'fecha_compra'       => $validated['fecha_compra'],
+                'origen_compra'      => $validated['origen_compra'],
+                'precio_unitario'    => $validated['precio_unitario'],
+                'deposito_id'        => $validated['deposito_id'],
+                'usuario_id'         => Auth::id(), 
+            ]);
 
             return response()->json([
-                'mensaje' => 'Repuesto creado exitosamente.',
-                'exito'   => true
+                'exito'   => true,
+                'mensaje' => 'Repuesto registrado correctamente en ambas tablas.',
             ]);
         } catch (\Exception $e) {
-            return response()->json([
-                'mensaje' => 'Error al crear el repuesto: ' . $e->getMessage(),
-                'exito'   => false
+            Log::error('Error en store()', [
+                'mensaje' => $e->getMessage(),
+                'trace'   => $e->getTraceAsString(),
             ]);
+
+            return response()->json([
+                'exito'   => false,
+                'mensaje' => 'Error al registrar el repuesto.',
+            ], 500);
         }
     }
 
+    // Mostrar formulario para agregar una entrada de repuesto
+    public function createEntrada($repuesto_id)
+    {
+        $repuesto = Repuesto::findOrFail($repuesto_id);
+        return view('add', compact('repuesto'));
+    }
+
+    // Retiro Admin
+    public function retirarFormAdmin($repuesto_id)
+    {
+        $repuesto = Repuesto::findOrFail($repuesto_id);
+        $depositos = Deposito::orderBy('nombre')->get();
+
+        return view('Retirar', compact('repuesto', 'depositos'));
+    }
+    public function retirarExistenciaAdmin(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'repuesto_id'   => 'required|exists:repuestos,id',
+            'deposito_id'   => 'required|exists:depositos,id',
+            'cantidad'      => 'required|integer|min:1',
+            'solicita'      => 'required|string|max:100',
+            'entrega'       => 'required|string|max:100',
+            'autoriza'      => 'required|string|max:100',
+            'observaciones' => 'nullable|string|max:1000',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'exito'   => false,
+                'mensaje' => 'Datos inválidos.',
+                'errores' => $validator->errors()
+            ], 422);
+        }
+
+        $repuesto_id = $request->repuesto_id;
+        $deposito_id = $request->deposito_id;
+
+        $entradas = EntradaRepuesto::where('repuesto_id', $repuesto_id)
+            ->where('deposito_id', $deposito_id)
+            ->sum('cantidad_adquirida');
+
+        $salidas = Movimiento::where('repuesto_id', $repuesto_id)
+            ->where('deposito_id', $deposito_id)
+            ->where('tipo_movimiento', 'salida')
+            ->sum('cantidad');
+
+        $existencia = $entradas - $salidas;
+
+        if ($existencia < $request->cantidad) {
+            return response()->json([
+                'exito'   => false,
+                'mensaje' => 'No hay suficiente existencia en ese depósito.'
+            ]);
+        }
+
+        // Descontar del stock global del repuesto
+        $repuesto = Repuesto::find($repuesto_id);
+        $repuesto->existencia -= $request->cantidad;
+        $repuesto->save();
+
+        // Registrar el movimiento
+        Movimiento::create([
+            'entrada_id'      => null,
+            'repuesto_id'     => $repuesto->id,
+            'deposito_id'     => $deposito_id,
+            'tipo_movimiento' => 'salida',
+            'cantidad'        => $request->cantidad,
+            'usuario_id'      => Auth::id(),
+            'usuario_nombre'  => Auth::user()->usuario ?? '—',
+            'fecha'           => now(),
+            'observaciones'   => $request->observaciones,
+            'solicita'        => $request->solicita,
+            'entrega'         => $request->entrega,
+            'autoriza'        => $request->autoriza,
+        ]);
+
+        return response()->json([
+            'exito'   => true,
+            'mensaje' => 'Retiro realizado correctamente.'
+        ]);
+    }
+
+    // Retiro Normal
+    public function retirarFormNormal($repuesto_id)
+    {
+        $repuesto = Repuesto::findOrFail($repuesto_id);
+        $depositos = Deposito::orderBy('nombre')->get();
+
+        return view('Retirarn', compact('repuesto', 'depositos'));
+    }
+    public function retirarExistenciaNormal(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'repuesto_id'   => 'required|exists:repuestos,id',
+            'deposito_id'   => 'required|exists:depositos,id',
+            'cantidad'      => 'required|integer|min:1',
+            'solicita'      => 'required|string|max:100',
+            'entrega'       => 'required|string|max:100',
+            'autoriza'      => 'required|string|max:100',
+            'observaciones' => 'nullable|string|max:1000',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'exito'   => false,
+                'mensaje' => 'Datos inválidos.',
+                'errores' => $validator->errors()
+            ], 422);
+        }
+
+        $repuesto_id = $request->repuesto_id;
+        $deposito_id = $request->deposito_id;
+
+        $entradas = EntradaRepuesto::where('repuesto_id', $repuesto_id)
+            ->where('deposito_id', $deposito_id)
+            ->sum('cantidad_adquirida');
+
+        $salidas = Movimiento::where('repuesto_id', $repuesto_id)
+            ->where('deposito_id', $deposito_id)
+            ->where('tipo_movimiento', 'salida')
+            ->sum('cantidad');
+
+        $existencia = $entradas - $salidas;
+
+        if ($existencia < $request->cantidad) {
+            return response()->json([
+                'exito'   => false,
+                'mensaje' => 'No hay suficiente existencia en ese depósito.'
+            ]);
+        }
+
+        // Descontar del stock global del repuesto
+        $repuesto = Repuesto::find($repuesto_id);
+        $repuesto->existencia -= $request->cantidad;
+        $repuesto->save();
+
+        // Registrar el movimiento
+        Movimiento::create([
+            'entrada_id'      => null,
+            'repuesto_id'     => $repuesto->id,
+            'deposito_id'     => $deposito_id,
+            'tipo_movimiento' => 'salida',
+            'cantidad'        => $request->cantidad,
+            'usuario_id'      => Auth::id(),
+            'usuario_nombre'  => Auth::user()->usuario ?? '—',
+            'fecha'           => now(),
+            'observaciones'   => $request->observaciones,
+            'solicita'        => $request->solicita,
+            'entrega'         => $request->entrega,
+            'autoriza'        => $request->autoriza,
+        ]);
+
+        return response()->json([
+            'exito'   => true,
+            'mensaje' => 'Retiro realizado correctamente.'
+        ]);
+    }
+
+    // Buscar repuesto por nombre (para autocomplete)
     public function buscarAjax(Request $request)
     {
-        $term = $request->get('term'); 
+        $term = $request->get('term');
 
         $resultados = Repuesto::where('nombre', 'LIKE', "%{$term}%")
-            ->pluck('nombre')   
-            ->take(10);         
+            ->orWhere('codigo', 'LIKE', "%{$term}%")
+            ->select('id', 'codigo', 'nombre')
+            ->take(10)
+            ->get();
 
         return response()->json($resultados);
     }
 
-    public function update(Request $request, $id)
+    // Consultar información de un repuesto 
+    public function infoRepuesto(Request $request)
     {
-        $validated = $request->validate([
-            'nombre'            => 'required|string|max:255',
-            'descripcion'       => 'nullable|string',
-            'cantidad'          => 'required|integer|min:0',
-            'nombre_fabricante' => 'nullable|string|max:255',
-            'estado_repuesto'   => 'required|string|in:nuevo,reacondicionado',
-        ]);
+        $nombre = $request->get('nombre');
+        $codigo = $request->get('codigo');
 
-        $repuesto = Repuesto::findOrFail($id);
-        $cantidadAnterior = $repuesto->cantidad;
+        $repuesto = null;
 
-        $repuesto->update($validated);
-
-        return redirect()->route('repuestos.index')
-            ->with('success', 'Repuesto actualizado correctamente.');
-    }
-
-    public function toggleEstado(Repuesto $repuesto)
-    {
-        $repuesto->estado = !$repuesto->estado; 
-        $repuesto->save();
-
-        return redirect()->route('inventario.index')->with('success', 'Estado del repuesto se ha actualizado correctamente.');
-    }
-
-    public function buscar(Request $request)
-    {
-        $nombre = $request->input('nombreConsulta');
-
-        $resultado = Repuesto::where('nombre', 'like', "%{$nombre}%")->first();
-
-        return view('repuestos.consulta', [
-            'resultado'      => $resultado,
-            'nombreConsulta' => $nombre
-        ]);
-    }
-
-    public function agregarExistencia(Request $request)
-    {
-        $validated = $request->validate([
-            'nombre'   => 'required|string|max:255',
-            'cantidad' => 'required|integer|min:1'
-        ]);
-
-        $repuesto = Repuesto::where('nombre', $validated['nombre'])->first();
+        if ($codigo) {
+            $repuesto = Repuesto::where('codigo', $codigo)->first();
+        } elseif ($nombre) {
+            $repuesto = Repuesto::where('nombre', $nombre)->first();
+        }
 
         if (!$repuesto) {
             return response()->json([
-                'mensaje' => 'Repuesto no encontrado.',
-                'exito'   => false
-            ]);
+                'error' => 'Repuesto no encontrado'
+            ], 404);
         }
 
-        $repuesto->cantidad += $validated['cantidad'];
-        $repuesto->save();
-
-        Movimiento::registrar($repuesto, $validated['cantidad'], 'entrada', 'Agregado desde el módulo de existencias');
-
         return response()->json([
-            'mensaje' => 'Stock actualizado correctamente.',
-            'exito'   => true
+            'id'          => $repuesto->id,
+            'codigo'      => $repuesto->codigo,
+            'nombre'      => $repuesto->nombre,
+            'descripcion' => $repuesto->descripcion,
+            'marca'       => $repuesto->nombre_fabricante,
+            'existencia'  => $repuesto->existencia,
+            'estado'      => $repuesto->estado,
         ]);
     }
-    
-    public function infoRepuesto(Request $request)
-{
-    $nombre = $request->get('nombre');
 
-    $repuesto = Repuesto::where('nombre', $nombre)->first();
-
-    if (!$repuesto) {
-        return response()->json(null, 404);
-    }
-
-    return response()->json([
-        'nombre'      => $repuesto->nombre,
-        'descripcion' => $repuesto->descripcion,
-        'marca'       => $repuesto->nombre_fabricante,
-        'cantidad'    => $repuesto->cantidad,
-    ]);
-}
-
+    // Mostrar inventario
     public function inventario()
     {
-        $repuestos = Repuesto::orderBy('nombre', 'asc')->get();
+        $repuestos = Repuesto::all();
         return view('inventario', compact('repuestos'));
     }
 
-    // RETIRAR PARA ADMIN
-    public function retirarExistenciaAdmin(Request $request)
+    // Mostrar detalle del repuesto
+    public function show($id)
     {
-        $request->validate([
-            'repuesto_id'   => 'required|exists:repuestos,id',
-            'cantidad'      => 'required|integer|min:1',
-            'descripcion'   => 'nullable|string|max:255',
-        ]);
-
-        $repuesto = Repuesto::findOrFail($request->repuesto_id);
-
-        if ($request->cantidad > $repuesto->cantidad) {
-            return response()->json([
-                'exito'   => false,
-                'mensaje' => 'No hay suficiente stock para realizar el retiro.'
-            ], 400);
-        }
-
-        $repuesto->cantidad -= $request->cantidad;
-        $repuesto->save();
-
-        Movimiento::registrar(
-            $repuesto,
-            $request->cantidad,
-            'salida',
-            $request->descripcion ?? 'Retiro de stock (admin)'
-        );
-
-        return response()->json([
-            'exito'       => true,
-            'mensaje'     => 'Retiro realizado correctamente (admin).',
-            'nuevo_stock' => $repuesto->cantidad
-        ]);
+        $repuesto = Repuesto::with('depositos')->findOrFail($id);
+        return response()->json($repuesto); 
     }
 
-    public function retirarFormAdmin($id)
+    // Activar - Desactivar Repuesto
+    public function toggleEstado($id)
     {
         $repuesto = Repuesto::findOrFail($id);
-        return view('Retirar', compact('repuesto'));
-    }
-
-    // RETIRAR PARA USUARIO NORMAL
-    public function retirarExistenciaNormal(Request $request)
-    {
-        $request->validate([
-            'repuesto_id'   => 'required|exists:repuestos,id',
-            'cantidad'      => 'required|integer|min:1',
-            'descripcion'   => 'nullable|string|max:255',
-        ]);
-
-        $repuesto = Repuesto::findOrFail($request->repuesto_id);
-
-        if ($request->cantidad > $repuesto->cantidad) {
-            return response()->json([
-                'message' => 'No hay suficiente stock para realizar el retiro.'
-            ], 400);
-        }
-
-        $repuesto->cantidad -= $request->cantidad;
+        $repuesto->estado = !$repuesto->estado;
         $repuesto->save();
 
-        Movimiento::registrar(
-            $repuesto,
-            $request->cantidad,
-            'salida',
-            $request->descripcion ?? 'Retiro de stock (usuario)'
-        );
-
         return response()->json([
-            'message' => 'Retiro realizado correctamente (usuario).',
-            'nuevo_stock' => $repuesto->cantidad
+            'success' => true,
+            'estado'  => $repuesto->estado
         ]);
     }
 
-    public function retirarFormNormal($id)
+    public function verDepositos($id)
     {
         $repuesto = Repuesto::findOrFail($id);
-        return view('Retirarn', compact('repuesto'));
+
+        $depositos = Deposito::select('depositos.id', 'depositos.nombre')
+            ->join('entrada_repuestos', 'depositos.id', '=', 'entrada_repuestos.deposito_id')
+            ->where('entrada_repuestos.repuesto_id', $id)
+            ->groupBy('depositos.id', 'depositos.nombre')
+            ->get()
+            ->map(function ($d) use ($id) {
+                $entradas = \App\Models\EntradaRepuesto::where('repuesto_id', $id)
+                    ->where('deposito_id', $d->id)
+                    ->sum('cantidad_adquirida');
+
+                $salidas = \App\Models\Movimiento::where('repuesto_id', $id)
+                    ->where('deposito_id', $d->id)
+                    ->where('tipo_movimiento', 'salida')
+                    ->sum('cantidad');
+
+                return [
+                    'nombre' => $d->nombre,
+                    'existencia' => $entradas - $salidas,
+                ];
+            });
+
+        return response()->json([
+            'repuesto' => $repuesto->nombre,
+            'depositos' => $depositos
+        ]);
     }
+
+    public function obtenerDepositosPorRepuesto($id)
+    {
+        try {
+            // Buscar el repuesto
+            $repuesto = Repuesto::findOrFail($id);
+
+            // Obtener los depósitos donde existe registro de ese repuesto
+            $depositos = Deposito::select('depositos.id', 'depositos.nombre')
+                ->join('entrada_repuestos', 'depositos.id', '=', 'entrada_repuestos.deposito_id')
+                ->where('entrada_repuestos.repuesto_id', $id)
+                ->groupBy('depositos.id', 'depositos.nombre')
+                ->get()
+                ->map(function ($d) use ($id) {
+                    // Calcular entradas totales
+                    $entradas = \App\Models\EntradaRepuesto::where('repuesto_id', $id)
+                        ->where('deposito_id', $d->id)
+                        ->sum('cantidad_adquirida');
+
+                    // Calcular salidas totales
+                    $salidas = \App\Models\Movimiento::where('repuesto_id', $id)
+                        ->where('deposito_id', $d->id)
+                        ->where('tipo_movimiento', 'salida')
+                        ->sum('cantidad');
+
+                    // Calcular existencia final
+                    $existencia = $entradas - $salidas;
+
+                    return [
+                        'id' => $d->id,
+                        'nombre' => $d->nombre,
+                        'existencia' => $existencia,
+                    ];
+                });
+
+            return response()->json([
+                'exito' => true,
+                'repuesto' => $repuesto->nombre,
+                'depositos' => $depositos
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error al obtener depósitos: ' . $e->getMessage());
+
+            return response()->json([
+                'exito' => false,
+                'mensaje' => 'Error al obtener los depósitos del repuesto.'
+            ], 500);
+        }
+    }
+
+
 }

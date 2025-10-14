@@ -15,7 +15,8 @@
     <!-- Botón de salida -->
     <div class="absolute top-4 right-6">
         <button onclick="location.href='{{ route('login') }}'" 
-            class="px-4 py-2 rounded-lg shadow-md bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition duration-300 hover:scale-105">
+            class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-lg shadow-md hover:scale-105 transition-transform duration-300">
+            <img src="{{ asset('images/salir.png') }}" alt="Salir" class="w-5 h-5">
             Salir
         </button>
     </div>

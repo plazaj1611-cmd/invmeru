@@ -10,11 +10,13 @@ class Repuesto extends Model
     use HasFactory;
 
     protected $fillable = [
+        'codigo',
         'nombre',
-        'cantidad',
         'descripcion', 
+        'existencia',
         'nombre_fabricante',
         'estado_repuesto',
+        'deposito_id',
         'estado'
     ];
 
@@ -22,4 +24,17 @@ class Repuesto extends Model
     {
         return $this->hasMany(Movimiento::class);
     }
+
+    public function entradas()
+    {
+        return $this->hasMany(EntradaRepuesto::class);
+    }
+
+    public function depositos()
+    {
+        return $this->belongsToMany(Deposito::class,'entrada_repuestos')
+                    ->withPivot('cantidad_adquirida', 'fecha_ingreso')
+                    ->withTimestamps();
+    }
+
 }
