@@ -56,6 +56,20 @@ class RepuestosController extends Controller
                 'usuario_id'         => Auth::id(), 
             ]);
 
+            Movimiento::create([
+                'entrada_id'       => null,
+                'repuesto_id'      => $repuesto->id,
+                'usuario_id'       => Auth::id(),
+                'tipo_movimiento'  => 'entrada',
+                'cantidad'         => $validated['existencia'],
+                'solicita'         => null,
+                'entrega'          => null,
+                'autoriza'         => null,
+                'fecha'            => now(),
+                'observaciones'    => $validated['descripcion'],
+                'deposito_id'      => $validated['deposito_id'],
+            ]);
+
             return response()->json([
                 'exito'   => true,
                 'mensaje' => 'Repuesto registrado correctamente en ambas tablas.',
